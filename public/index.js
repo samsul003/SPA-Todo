@@ -1,4 +1,4 @@
-const endpoint = "/api/todos";
+const endpoint = "/api/items";
 const inputId = $('#todoInput');
 const todoList = $('.list');
 
@@ -6,81 +6,64 @@ $(document).ready(function() {
 	$.getJSON(endpoint)
 		.then(addTodos)
 	
-	inputId.keypress((e) => {
-		// check if pressed ENTER
-		e.which === 13 ? createTodo() : false;
-	});
+	inputId.keypress(event => event.which === 13 ? createTodo() : false);
 	
-	todoList.on('click', 'li', function () {
-		updateTodo($(this));
-	});
+	todoList.on('click', 'li', () => updateTodo($(this)));
 	
-	todoList.on('click', '.delete', function(e) {
-		// stop event bubbling
-		e.stopPropagation();
+	todoList.on('click', '.delete', event => {
+		event.stopPropagation();
 		removeTodo($(this).parent());
 	});
 });
 
-function addTodos(todos) {
-	todos.forEach((todo) => {
-		addTodo(todo)
-	});
-}
+const addTodos = items => items.forEach(item => addTodo(item));
 
-function addTodo(todo) {
-	// insert item
+const addTodo = item => {
 	const newTodo =
-		$(`<li class="task">${todo.name}<span class="delete"></span></li>`);
-	// keep track of the id with completed status for real-time sync
-	newTodo.data('id', todo._id);
-	newTodo.data('completed', todo.completed);
-	
-	todo.completed ? newTodo.addClass('done') : newTodo;
+		$(`<li class="task">${item.name}<span class="delete"></span></li>`);
+
+	newTodo.data('id', item._id);
+	newTodo.data('completed', item.completed);
+
+	item.completed ? newTodo.addClass('done') : newTodo;
+
 	todoList.append(newTodo);
 }
 
-function createTodo() {
-	const userInput = inputId.val();
-	// prevent POST without payload
-	if(!userInput) return;
-	const payload = { name: userInput };
-	
-	$.post(endpoint, payload)
-		.then((newTodo) => {
+const createTodo = () => {
+	const inputValue = inputId.val();
+
+	if(!inputValue) return;
+
+	$.post(endpoint, { name: inputValue })
+		.then(newTodo => {
 			inputId.val('');
 			addTodo(newTodo);
 		})
-		.catch((err) => {
-			console.log(err)
-		})
+		.catch(err => console.log(err))
 }
 
-function removeTodo(todo) {
-	const clickedId = todo.data('id');
-	
+const removeTodo = item => {
+	const itemClicked = item.data('id');
+
 	$.ajax({
 		method: 'DELETE',
-		url: `${endpoint}/${clickedId}`
+		url: `${endpoint}/${itemClicked}`
 	})
-	.then(() => {
-		todo.remove()
-	});
+	.then(() => item.remove());
 }
 
-function updateTodo(todo) {
-	const clickedId = todo.data('id');
-	// toggle completed status
-	const isCompleted = !todo.data('completed');
-	const payload = { completed: isCompleted };
-	
+const updateTodo = item => {
+	const itemClicked = item.data('id');
+	const isCompleted = !item.data('completed');
+
 	$.ajax({
 		method: 'PATCH',
-		url: `${endpoint}/${clickedId}`,
-		data: payload
+		url: `${endpoint}/${itemClicked}`,
+		data: { completed: isCompleted }
 	})
 	.then(() => {
-		todo.toggleClass('done');
-		todo.data('completed', isCompleted)
+		item.toggleClass('done');
+		item.data('completed', isCompleted)
 	})
 }
