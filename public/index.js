@@ -1,4 +1,4 @@
-const endpoint = "/api/items";
+const endpoint = "/api/todos";
 const inputId = $('#todoInput');
 const todoList = $('.list');
 
